@@ -5,6 +5,8 @@ import {
   CollateralManager__factory,
   MockPriceOracle,
   MockPriceOracle__factory,
+  MockERC20,
+  MockERC20__factory,
 } from "../typechain";
 
 describe("CollateralManager Contract", () => {
@@ -12,16 +14,18 @@ describe("CollateralManager Contract", () => {
   let priceOracle: MockPriceOracle;
 
   beforeEach(async () => {
+    // Deploy the MockPriceOracle
     const MockPriceOracleFactory = (await ethers.getContractFactory(
       "MockPriceOracle"
     )) as MockPriceOracle__factory;
-    priceOracle = await MockPriceOracleFactory.deploy();
+    priceOracle = (await MockPriceOracleFactory.deploy()) as MockPriceOracle;
     await priceOracle.deployed();
 
+    // Deploy the CollateralManager
     const CollateralManagerFactory = (await ethers.getContractFactory(
       "CollateralManager"
     )) as CollateralManager__factory;
-    collateralManager = await CollateralManagerFactory.deploy(priceOracle.address);
+    collateralManager = (await CollateralManagerFactory.deploy(priceOracle.address)) as CollateralManager;
     await collateralManager.deployed();
 
     // Set initial prices
@@ -55,8 +59,8 @@ describe("CollateralManager Contract", () => {
     const [owner, addr1] = await ethers.getSigners();
 
     // Mock USDC token
-    const MockERC20Factory = await ethers.getContractFactory("MockERC20");
-    const usdc = await MockERC20Factory.deploy("USD Coin", "USDC", ethers.utils.parseEther("10000"));
+    const MockERC20Factory = (await ethers.getContractFactory("MockERC20")) as MockERC20__factory;
+    const usdc = (await MockERC20Factory.deploy("USD Coin", "USDC", ethers.utils.parseEther("10000"))) as MockERC20;
     await usdc.transfer(addr1.address, ethers.utils.parseEther("1000"));
 
     // Set ERC20 support in Collateral Manager
