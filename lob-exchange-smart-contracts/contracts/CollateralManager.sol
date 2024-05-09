@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -21,7 +21,7 @@ contract CollateralManager is Ownable {
     event CollateralDeposited(address indexed user, string asset, uint256 amount);
     event CollateralWithdrawn(address indexed user, string asset, uint256 amount);
 
-    constructor(address _priceOracleAddress) {
+    constructor(address _priceOracleAddress) Ownable(msg.sender) {
         priceOracle = IPriceOracle(_priceOracleAddress);
 
         // Initialize supported assets
