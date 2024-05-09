@@ -93,14 +93,14 @@ contract OrderBook {
             }
         }
 
-        buyOrders[asset] = sliceOrders(buy, buyIndex);
-        sellOrders[asset] = sliceOrders(sell, sellIndex);
+        buyOrders[asset] = sliceOrdersList(buy, buyIndex);
+        sellOrders[asset] = sliceOrdersList(sell, sellIndex);
     }
 
-    function sliceOrders(uint256[] memory orders, uint256 index) private pure returns (uint256[] memory) {
-        uint256[] memory newOrders = new uint256[](orders.length - index);
-        for (uint256 i = index; i < orders.length; i++) {
-            newOrders[i - index] = orders[i];
+    function sliceOrdersList(uint256[] memory orderList, uint256 index) private pure returns (uint256[] memory) {
+        uint256[] memory newOrders = new uint256[](orderList.length - index);
+        for (uint256 i = index; i < orderList.length; i++) {
+            newOrders[i - index] = orderList[i];
         }
         return newOrders;
     }

@@ -13,7 +13,8 @@ contract Liquidation {
     }
 
     function liquidatePosition(address user, uint256 currentPrice) public {
-        Perpetual.Position memory position = perpetual.positions(user);
+        Perpetual.Position memory position = perpetual.getPosition(user);
+
         require(
             (position.isLong && currentPrice < position.liquidationPrice) ||
             (!position.isLong && currentPrice > position.liquidationPrice),

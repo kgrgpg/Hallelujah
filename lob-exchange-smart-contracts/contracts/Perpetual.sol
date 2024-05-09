@@ -42,4 +42,8 @@ contract Perpetual {
         emit PositionClosed(msg.sender, position.isLong, position.amount, exitPrice);
         delete positions[msg.sender];
     }
+
+    function getPosition(address user) public view returns (Position memory) {
+        return positions[user];
+    }
 }
