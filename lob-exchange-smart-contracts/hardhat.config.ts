@@ -1,14 +1,26 @@
-import { HardhatUserConfig } from 'hardhat/types';
-import '@nomiclabs/hardhat-ethers';
+import { HardhatUserConfig } from "hardhat/types";
+import "@nomiclabs/hardhat-ethers";
+import "@nomiclabs/hardhat-waffle";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 const config: HardhatUserConfig = {
-    solidity: '0.8.18',
-    networks: {
-        base: {
-            url: 'https://base-goerli.infura.io/v3/YOUR_INFURA_PROJECT_ID',
-            accounts: ['YOUR_PRIVATE_KEY']
-        }
+  solidity: {
+    version: "0.8.18",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200
+      }
     }
+  },
+  networks: {
+    base: {
+      url: `https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
+      accounts: [process.env.BASE_PRIVATE_KEY || ""]
+    }
+  }
 };
 
 export default config;
