@@ -4,30 +4,18 @@ import { createOrder, fetchOrders } from './orderService';
 const app = express();
 app.use(express.json());
 
-app.post('/orders', async (req, res) => {
-  try {
-    const order = await createOrder(req.body);
-    res.status(201).json(order);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'An unknown error occurred' });
-    }
-  }
+app.post('/orders', (req, res) => {
+  createOrder(req.body).subscribe({
+    next: order => res.status(201).json(order),
+    error: err => res.status(500).json({ error: err.message })
+  });
 });
 
-app.get('/orders', async (req, res) => {
-  try {
-    const orders = await fetchOrders();
-    res.status(200).json(orders);
-  } catch (error) {
-    if (error instanceof Error) {
-      res.status(500).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'An unknown error occurred' });
-    }
-  }
+app.get('/orders', (req, res) => {
+  fetchOrders().subscribe({
+    next: orders => res.status(200).json(orders),
+    error: err => res.status(500).json({ error: err.message })
+  });
 });
 
 const PORT = process.env.PORT || 3000;
