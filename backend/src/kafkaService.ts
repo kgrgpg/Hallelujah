@@ -5,8 +5,8 @@ const kafka = new Kafka({
   brokers: ['localhost:9092'] // Adjust as per your Kafka setup
 });
 
-const producer = kafka.producer();
-const consumer = kafka.consumer({ groupId: 'lob-exchange-group' });
+export const producer = kafka.producer();
+export const consumer = kafka.consumer({ groupId: 'lob-exchange-group' });
 
 export const initializeKafka = async () => {
   await producer.connect();
@@ -19,6 +19,4 @@ export const initializeKafka = async () => {
       // Additional logic to handle the message
     },
   });
-
-  return { producer, consumer };
 };
