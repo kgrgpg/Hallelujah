@@ -5,16 +5,18 @@ import { from } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
 interface Order {
-  userId: string;
+  id: string;
+  product: string;
   quantity: number;
   price: number;
-  product: string;
+  userId: string;
+  type: string;
 }
 
 export const createOrder = (order: Order) => {
-  return from(query('INSERT INTO orders(user_id, amount, price, type) VALUES($1, $2, $3, $4) RETURNING *', [
-    order.userId, order.quantity, order.price, order.product
-  ])).pipe(
+  const queryText = 'INSERT INTO orders(user_id, product, quantity, price, type) VALUES($1, $2, $3, $4, $5) RETURNING *';
+  const values = [order.userId, order.product, order.quantity, order.price, order.type];
+  return from(query(queryText, values)).pipe(
     map(response => {
       const newOrder = response.rows[0];
       // Send to Kafka

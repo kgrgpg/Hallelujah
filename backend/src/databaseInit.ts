@@ -7,10 +7,10 @@ const createTables = () => {
     CREATE TABLE IF NOT EXISTS orders (
       id SERIAL PRIMARY KEY,
       user_id VARCHAR(255) NOT NULL,
-      amount INTEGER NOT NULL,
+      product VARCHAR(255) NOT NULL,
+      quantity INTEGER NOT NULL,
       price INTEGER NOT NULL,
-      type VARCHAR(255) NOT NULL,
-      product VARCHAR(255) NOT NULL
+      type VARCHAR(255) NOT NULL
     );
   `;
 
