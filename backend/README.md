@@ -52,3 +52,13 @@ This configuration sets up Kafka to run in a standalone mode with KRaft for mana
 
 ### Final Note
 Ensure all paths and configurations are adjusted to your local setup. For instance, verify the paths for logs and other configurations to match your directory structure. This setup should allow you to run Kafka in KRaft mode on your Windows machine effectively.
+
+## Create and Fetch orders in Windows PowerShell
+
+### POST request to create an order
+$headers = @{"Content-Type"="application/json"}
+$data = '{"product":"BTC", "quantity":1, "price":50000, "userId":"user123", "type":"buy"}'
+Invoke-RestMethod -Uri "http://localhost:3000/orders" -Method Post -Headers $headers -Body $data
+
+### GET request to fetch orders
+Invoke-RestMethod -Uri "http://localhost:3000/orders" -Method Get

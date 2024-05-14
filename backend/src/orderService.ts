@@ -1,8 +1,8 @@
 import { producer } from './kafkaService';
 import redis from './redisService';
 import { query } from './databaseService';
-import { from } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { from, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 interface Order {
   id: string;
@@ -36,14 +36,27 @@ export const createOrder = (order: Order) => {
 
 export const fetchOrders = () => {
   return from(redis.get('orders')).pipe(
+    switchMap(cacheResult => {
+      if (cacheResult) {
+        console.log('Orders fetched from Redis:', cacheResult);
+        return of(JSON.parse(cacheResult));
+      } else {
+        console.log('Orders not found in Redis, fetching from database.');
+        return from(query('SELECT * FROM orders')).pipe(
+          map(dbRes => {
+            const orders = dbRes.rows;
+            redis.set('orders', JSON.stringify(orders));  // Cache the result
+            return orders;
+          }),
+          catchError(dbErr => {
+            throw new Error('Database fetch failed: ' + dbErr.message);
+          })
+        );
+      }
+    }),
     catchError(err => {
-      console.error('Failed to retrieve from Redis:', err);
-      return from(query('SELECT * FROM orders')).pipe(
-        map(dbRes => dbRes.rows),
-        catchError(dbErr => {
-          throw new Error('Database fetch failed: ' + dbErr.message);
-        })
-      );
+      console.error('Failed to retrieve from Redis or database:', err);
+      throw new Error('Failed to fetch orders: ' + err.message);
     })
   );
 };
