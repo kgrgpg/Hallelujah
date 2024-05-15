@@ -1,41 +1,69 @@
+// src/app/randomOrders/page.tsx
+
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Subscription, timer } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
-import { sendRandomOrder } from '../../utils/orderUtils';
+import { useEffect, useState } from 'react';
+import { generateRandomOrder } from '../../utils/orderGenerator';
+import { from } from 'rxjs';
+import axios from 'axios';
+import { map, catchError } from 'rxjs/operators';
 
-const RandomOrders = () => {
+const apiClient = axios.create({
+  baseURL: 'http://localhost:3000',
+});
+
+const RandomOrdersPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [orders, setOrders] = useState([]);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
+    const ws = new WebSocket('ws://localhost:3000');
+    ws.onmessage = (event) => {
+      const newOrder = JSON.parse(event.data);
+      setOrders((prevOrders) => [...prevOrders, newOrder]);
+    };
+    setSocket(ws);
+
+    return () => ws.close();
+  }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
     if (isGenerating) {
-      const sub = timer(0, 1000).pipe(
-        switchMap(() => sendRandomOrder())
-      ).subscribe({
-        next: order => console.log('Order created:', order),
-        error: err => console.error(err.message)
-      });
-      setSubscription(sub);
-    } else if (subscription) {
-      subscription.unsubscribe();
-      setSubscription(null);
+      interval = setInterval(() => {
+        const order = generateRandomOrder();
+        from(apiClient.post('/orders', order)).pipe(
+          map(response => response.data),
+          catchError(error => {
+            console.error('Failed to create order:', error.message);
+            return [];
+          })
+        ).subscribe();
+      }, 1000);
     }
+    return () => clearInterval(interval);
   }, [isGenerating]);
 
-  const handleButtonClick = () => {
-    setIsGenerating(prev => !prev);
+  const toggleGenerating = () => {
+    setIsGenerating(!isGenerating);
   };
 
   return (
     <div>
-      <h1>Random Order Generator</h1>
-      <button onClick={handleButtonClick}>
-        {isGenerating ? 'Stop' : 'Start'} Generating Orders
+      <h1>Random Orders</h1>
+      <button onClick={toggleGenerating}>
+        {isGenerating ? 'Stop Generating Orders' : 'Start Generating Orders'}
       </button>
+      <ul>
+        {orders.map((order: any, index: number) => (
+          <li key={index}>
+            {order.product} - {order.quantity} @ ${order.price} ({order.type})
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
 
-export default RandomOrders;
+export default RandomOrdersPage;
