@@ -1,10 +1,13 @@
 import express from 'express';
+import cors from 'cors';
 import { createOrder, fetchOrders } from './orderService';
 import { initializeKafka } from './kafkaService';
 import { initializeDatabase } from './databaseInit';
 
 const app = express();
 app.use(express.json());
+
+app.use(cors());
 
 app.post('/orders', (req, res) => {
   createOrder(req.body).subscribe({
