@@ -17,7 +17,7 @@ export const createOrder = (order: Order) => {
   const queryText = 'INSERT INTO orders(user_id, product, quantity, price, type) VALUES($1, $2, $3, $4, $5) RETURNING *';
   const values = [order.userId, order.product, order.quantity, order.price, order.type];
   return from(query(queryText, values)).pipe(
-    map(response => {
+    switchMap(response => {
       const newOrder = response.rows[0];
       // Send to Kafka
       producer.send({
@@ -25,8 +25,23 @@ export const createOrder = (order: Order) => {
         messages: [{ value: JSON.stringify(newOrder) }],
       });
       // Cache in Redis
-      redis.set(`order:${newOrder.id}`, JSON.stringify(newOrder));
-      return newOrder;
+      return redis.get('orders').pipe(
+        switchMap(ordersCache => {
+          let orders = [];
+          if (ordersCache) {
+            try {
+              orders = JSON.parse(ordersCache);
+            } catch (err) {
+              console.error('Failed to parse existing orders JSON:', err);
+              return redis.del('orders').pipe(map(() => [newOrder]));
+            }
+          }
+          orders.push(newOrder);
+          return redis.set('orders', JSON.stringify(orders)).pipe(
+            map(() => newOrder)
+          );
+        })
+      );
     }),
     catchError(err => {
       throw new Error('Failed to create order: ' + err.message);
@@ -38,25 +53,38 @@ export const fetchOrders = () => {
   return from(redis.get('orders')).pipe(
     switchMap(cacheResult => {
       if (cacheResult) {
-        console.log('Orders fetched from Redis:', cacheResult);
-        return of(JSON.parse(cacheResult));
+        try {
+          const orders = JSON.parse(cacheResult);
+          console.log('Orders fetched from Redis:', orders);
+          return of(orders);
+        } catch (err) {
+          console.error('Invalid JSON in Redis, clearing cache:', cacheResult);
+          return redis.del('orders').pipe(
+            switchMap(() => fetchOrdersFromDB())
+          );
+        }
       } else {
         console.log('Orders not found in Redis, fetching from database.');
-        return from(query('SELECT * FROM orders')).pipe(
-          map(dbRes => {
-            const orders = dbRes.rows;
-            redis.set('orders', JSON.stringify(orders));  // Cache the result
-            return orders;
-          }),
-          catchError(dbErr => {
-            throw new Error('Database fetch failed: ' + dbErr.message);
-          })
-        );
+        return fetchOrdersFromDB();
       }
     }),
     catchError(err => {
       console.error('Failed to retrieve from Redis or database:', err);
       throw new Error('Failed to fetch orders: ' + err.message);
+    })
+  );
+};
+
+const fetchOrdersFromDB = () => {
+  return from(query('SELECT * FROM orders')).pipe(
+    switchMap(dbRes => {
+      const orders = dbRes.rows;
+      return redis.set('orders', JSON.stringify(orders)).pipe(
+        map(() => orders)
+      );
+    }),
+    catchError(dbErr => {
+      throw new Error('Database fetch failed: ' + dbErr.message);
     })
   );
 };

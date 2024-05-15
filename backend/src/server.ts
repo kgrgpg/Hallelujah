@@ -6,19 +6,25 @@ import { initializeDatabase } from './databaseInit';
 
 const app = express();
 app.use(express.json());
-
 app.use(cors());
 
 app.post('/orders', (req, res) => {
+  console.log('Received new order:', req.body);
   createOrder(req.body).subscribe({
-    next: order => res.status(201).json(order),
+    next: order => {
+      console.log('Order created:', order);
+      res.status(201).json(order);
+    },
     error: (err: Error) => res.status(500).json({ error: err.message })
   });
 });
 
 app.get('/orders', (req, res) => {
   fetchOrders().subscribe({
-    next: orders => res.status(200).json(orders),
+    next: orders => {
+      console.log('Orders fetched:', orders);
+      res.status(200).json(orders);
+    },
     error: (err: Error) => res.status(500).json({ error: err.message })
   });
 });
