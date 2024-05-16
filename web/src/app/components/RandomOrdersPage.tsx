@@ -1,9 +1,8 @@
-// src/app/randomOrders/page.tsx
-
+// src/app/components/RandomOrdersPage.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
-import { generateRandomOrder } from '../../utils/orderGenerator';
+import { generateRandomOrder } from '../../services/orderGenerator';
 import { from } from 'rxjs';
 import axios from 'axios';
 import { map, catchError } from 'rxjs/operators';
@@ -12,10 +11,10 @@ const apiClient = axios.create({
   baseURL: 'http://localhost:3000',
 });
 
-const RandomOrdersPage = () => {
+const RandomOrdersPage: React.FC = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [orders, setOrders] = useState([]);
-  const [socket, setSocket] = useState(null);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
 
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:3000');

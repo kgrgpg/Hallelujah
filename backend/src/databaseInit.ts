@@ -8,8 +8,8 @@ const createTables = () => {
       id SERIAL PRIMARY KEY,
       user_id VARCHAR(255) NOT NULL,
       product VARCHAR(255) NOT NULL,
-      quantity INTEGER NOT NULL,
-      price INTEGER NOT NULL,
+      quantity NUMERIC NOT NULL,
+      price NUMERIC NOT NULL,
       type VARCHAR(255) NOT NULL
     );
   `;

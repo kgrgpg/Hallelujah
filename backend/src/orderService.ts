@@ -16,34 +16,41 @@ interface Order {
 export const createOrder = (order: Order) => {
   const queryText = 'INSERT INTO orders(user_id, product, quantity, price, type) VALUES($1, $2, $3, $4, $5) RETURNING *';
   const values = [order.userId, order.product, order.quantity, order.price, order.type];
+  
   return from(query(queryText, values)).pipe(
     switchMap(response => {
       const newOrder = response.rows[0];
+      console.log('Order stored in DB:', newOrder);
+
       // Send to Kafka
-      producer.send({
+      return from(producer.send({
         topic: 'orders',
-        messages: [{ value: JSON.stringify(newOrder) }],
-      });
-      // Cache in Redis
-      return redis.get('orders').pipe(
-        switchMap(ordersCache => {
-          let orders = [];
-          if (ordersCache) {
-            try {
-              orders = JSON.parse(ordersCache);
-            } catch (err) {
-              console.error('Failed to parse existing orders JSON:', err);
-              return redis.del('orders').pipe(map(() => [newOrder]));
-            }
-          }
-          orders.push(newOrder);
-          return redis.set('orders', JSON.stringify(orders)).pipe(
-            map(() => newOrder)
+        messages: [{ value: JSON.stringify(newOrder) }]
+      })).pipe(
+        switchMap(() => {
+          // Cache in Redis
+          return redis.get('orders').pipe(
+            switchMap(ordersCache => {
+              let orders = [];
+              if (ordersCache) {
+                try {
+                  orders = JSON.parse(ordersCache);
+                } catch (err) {
+                  console.error('Failed to parse existing orders JSON:', err);
+                  return redis.del('orders').pipe(map(() => [newOrder]));
+                }
+              }
+              orders.push(newOrder);
+              return redis.set('orders', JSON.stringify(orders)).pipe(
+                map(() => newOrder)
+              );
+            })
           );
         })
       );
     }),
     catchError(err => {
+      console.error('Failed to create order:', err); // Log the error
       throw new Error('Failed to create order: ' + err.message);
     })
   );
@@ -79,6 +86,7 @@ const fetchOrdersFromDB = () => {
   return from(query('SELECT * FROM orders')).pipe(
     switchMap(dbRes => {
       const orders = dbRes.rows;
+      console.log('Orders fetched from DB:', orders);
       return redis.set('orders', JSON.stringify(orders)).pipe(
         map(() => orders)
       );
