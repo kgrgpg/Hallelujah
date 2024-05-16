@@ -1,84 +1,55 @@
 // src/app/components/OrderBook.tsx
+
 "use client";
 
 import { useEffect, useState } from 'react';
 import { fetchOrders } from '../../services/api';
 import { Subscription } from 'rxjs';
 
-interface Order {
-  id: string;
-  user_id: string;
-  product: string;
-  quantity: number;
-  price: number;
-  type: string;
-}
-
-const OrderBook: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [error, setError] = useState<string>('');
-  const [filter, setFilter] = useState<string>('all');
-  const [sortKey, setSortKey] = useState<string>('price');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+const OrderBook = () => {
+  const [orders, setOrders] = useState([]);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const subscription: Subscription = fetchOrders().subscribe({
-      next: (data: Order[]) => setOrders(data),
-      error: (err: Error) => setError(err.message),
+      next: (data) => setOrders(data),
+      error: (err) => setError(err.message),
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const filteredOrders = orders.filter(order => 
-    filter === 'all' ? true : order.type === filter
-  );
-
-  const sortedOrders = filteredOrders.sort((a, b) => {
-    if (sortOrder === 'asc') {
-      return a[sortKey] > b[sortKey] ? 1 : -1;
-    } else {
-      return a[sortKey] < b[sortKey] ? 1 : -1;
+  const formatPrice = (price) => {
+    if (typeof price === 'number') {
+      return price.toFixed(2);
     }
-  });
+    return price;
+  };
 
   return (
-    <div>
+    <div className="order-book">
       <h1>Order Book</h1>
       {error && <p>Error: {error}</p>}
-
-      <div>
-        <label>
-          Filter:
-          <select value={filter} onChange={e => setFilter(e.target.value)}>
-            <option value="all">All</option>
-            <option value="buy">Buy</option>
-            <option value="sell">Sell</option>
-          </select>
-        </label>
-        <label>
-          Sort By:
-          <select value={sortKey} onChange={e => setSortKey(e.target.value)}>
-            <option value="price">Price</option>
-            <option value="quantity">Quantity</option>
-          </select>
-        </label>
-        <label>
-          Order:
-          <select value={sortOrder} onChange={e => setSortOrder(e.target.value as 'asc' | 'desc')}>
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </select>
-        </label>
-      </div>
-
-      <ul>
-        {sortedOrders.map(order => (
-          <li key={order.id}>
-            {order.product} - {order.quantity} @ ${order.price} ({order.type})
-          </li>
-        ))}
-      </ul>
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          {orders.map((order: any) => (
+            <tr key={order.id}>
+              <td>{order.product}</td>
+              <td>{order.quantity}</td>
+              <td>${formatPrice(order.price)}</td>
+              <td>{order.type}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

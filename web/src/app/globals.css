@@ -1,24 +1,62 @@
 /* src/app/globals.css */
+
 body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-    background-color: #f5f5f5;
-  }
-  
-  h1 {
-    font-size: 2rem;
-    color: #333;
-  }
-  
-  ul {
-    list-style: none;
-    padding: 0;
-  }
-  
-  li {
-    margin: 0.5rem 0;
-    padding: 0.5rem;
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.header {
+  background-color: #2c3e50;
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header .logo a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.5rem;
+}
+
+.header .nav ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+}
+
+.header .nav ul li a {
+  color: white;
+  text-decoration: none;
+}
+
+.header .user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header .user-info span {
+  margin-right: 1rem;
+}
+
+.order-book {
+  padding: 1rem;
+}
+
+.order-book table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.order-book th, .order-book td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.order-book th {
+  background-color: #f2f2f2;
+}
